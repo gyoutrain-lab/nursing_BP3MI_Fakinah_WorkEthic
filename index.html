@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Simulator: Ethic & Workplace Adaptation in Nursing</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-950 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-heart-pulse text-3xl text-indigo-400"></i>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">Ethic & Workplace Adaptation Assessment</h1>
+                    <p class="text-xs text-indigo-200">Akper Teungku Fakinah Banda Aceh & BP3MI (2026)</p>
+                </div>
+            </div>
+            <div id="user-display-badge" class="hidden bg-indigo-900 px-4 py-1.5 rounded-full text-xs font-semibold border border-indigo-700 flex items-center space-x-2">
+                <i class="fa-solid fa-user-check text-indigo-400"></i>
+                <span id="badge-info">User ID</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Left Column: Registration / Exam Engine / Result -->
+        <div class="lg:col-span-3 space-y-6">
+
+            <!-- SCREEN 1: LOGIN & MODE SELECTION -->
+            <div id="screen-login" class="bg-white rounded-xl shadow-md p-6 md:p-8 border border-slate-200">
+                <div class="max-w-md mx-auto text-center space-y-3">
+                    <div class="w-16 h-16 bg-indigo-100 text-indigo-900 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900">Portal Evaluasi Etika & Adaptasi Kerja</h2>
+                    <p class="text-sm text-slate-500">Silakan lengkapi identitas Anda. Sistem ini mendukung alur sequential: Pre-Test (50 Soal) wajib diselesaikan sebelum membuka Post-Test (150 Soal).</p>
+                </div>
+
+                <form id="login-form" class="max-w-md mx-auto mt-6 space-y-4" onsubmit="handleRegistration(event)">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Lengkap Test Taker</label>
+                        <input type="text" id="input-name" required placeholder="Contoh: Ns. Giyono Asfarrasyid, S.Kep." class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nomor ID / NIP / NIM / Paspor</label>
+                        <input type="text" id="input-id" required placeholder="Contoh: 2026-ETHIC-099" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Institusi / Unit Kerja</label>
+                        <input type="text" id="input-inst" required value="Akper Teungku Fakinah Banda Aceh" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none text-sm bg-slate-50">
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        <button type="button" id="btn-start-pre" onclick="startTestMode('pre')" class="w-full bg-indigo-800 hover:bg-indigo-900 text-white font-bold py-3 rounded-lg shadow transition duration-200 text-sm flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Mulai Pre-Test (50 MCQ)</span>
+                        </button>
+                        
+                        <button type="button" id="btn-start-post" onclick="startTestMode('post')" disabled class="w-full bg-slate-200 text-slate-400 font-bold py-3 rounded-lg text-sm flex items-center justify-center space-x-2 cursor-not-allowed">
+                            <i class="fa-solid fa-lock" id="post-lock-icon"></i>
+                            <span id="post-btn-text">Mulai Post-Test (150 MCQ) - Terkunci</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SCREEN 2: EXAM ENGINE -->
+            <div id="screen-exam" class="hidden bg-white rounded-xl shadow-md p-6 md:p-8 border border-slate-200">
+                <!-- Question Header -->
+                <div class="flex justify-between items-center border-b pb-4 mb-6">
+                    <div>
+                        <span id="exam-mode-badge" class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded">PRE-TEST</span>
+                        <span id="question-mod-badge" class="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-1 rounded ml-2">Chapter 1</span>
+                        <h3 id="question-number-title" class="text-lg font-bold text-slate-900 mt-2">Soal #1</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500 block">Progres Soal</span>
+                        <span id="progress-text" class="text-sm font-bold text-indigo-700">1 / 50</span>
+                    </div>
+                </div>
+
+                <!-- Vignette / Question Body -->
+                <div id="question-text" class="text-base text-slate-800 leading-relaxed font-medium mb-6">
+                    Loading question text...
+                </div>
+
+                <!-- Options -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Dynamic Radio Options -->
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="flex justify-between items-center pt-8 border-t mt-8">
+                    <button id="btn-prev" onclick="navigateQuestion(-1)" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-sm transition">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Sebelumnya
+                    </button>
+                    <button id="btn-next" onclick="navigateQuestion(1)" class="px-5 py-2.5 bg-indigo-800 hover:bg-indigo-900 text-white font-semibold rounded-lg text-sm transition">
+                        Berikutnya <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                    <button id="btn-submit" onclick="confirmFinish()" class="hidden px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md text-sm transition">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Submit Jawaban
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: RESULT SCREEN -->
+            <div id="screen-result" class="hidden space-y-6">
+                <!-- Score Card -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 text-center">
+                    <span id="result-mode-tag" class="text-xs font-bold px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full inline-block mb-3">HASIL EVALUASI</span>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Ringkasan Hasil Ujian</h2>
+                    <p class="text-xs text-slate-500 mb-6">Ethic & Workplace Adaptation Professional Assessment</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <div class="bg-slate-50 p-4 rounded-lg border">
+                            <span class="text-xs text-slate-500 block">Skor Benar</span>
+                            <span id="score-correct" class="text-3xl font-extrabold text-emerald-600">0 / 50</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border">
+                            <span class="text-xs text-slate-500 block">Persentase</span>
+                            <span id="score-percentage" class="text-3xl font-extrabold text-indigo-700">0%</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border">
+                            <span class="text-xs text-slate-500 block">Hasil Kualifikasi</span>
+                            <span id="score-status" class="text-base font-bold text-slate-800 mt-1 block">Status</span>
+                        </div>
+                    </div>
+
+                    <!-- Unlock Action -->
+                    <div id="unlock-action-box" class="mt-6 pt-4 border-t hidden">
+                        <p class="text-xs text-emerald-700 font-semibold mb-3">Selamat! Pre-Test telah diselesaikan. Akses Post-Test (150 Soal) kini terbuka.</p>
+                        <button onclick="switchToPostTest()" class="px-6 py-2.5 bg-indigo-800 hover:bg-indigo-900 text-white font-bold rounded-lg shadow text-sm transition inline-flex items-center space-x-2">
+                            <span>Lanjut ke Post-Test (150 MCQ)</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Review / Rationales -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b">
+                        <i class="fa-solid fa-book-open text-indigo-700 mr-2"></i> Review Jawaban & Pembahasan Rasional
+                    </h3>
+                    <div id="rationales-list" class="space-y-6 custom-scrollbar max-h-[600px] overflow-y-auto pr-2">
+                        <!-- Dynamic Rationales -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Navigation Grid -->
+        <div id="sidebar-panel" class="hidden lg:block lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-5 border border-slate-200 sticky top-24">
+                <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
+                    <span>Navigasi Soal</span>
+                    <span id="sidebar-count" class="text-xs text-slate-400 font-normal">50 Items</span>
+                </h4>
+                
+                <!-- Quick Navigation Grid -->
+                <div id="nav-grid" class="grid grid-cols-5 gap-2 custom-scrollbar max-h-80 overflow-y-auto p-1 border rounded-lg bg-slate-50 mb-4">
+                    <!-- Dynamic Buttons -->
+                </div>
+
+                <div class="space-y-2 text-xs text-slate-600 border-t pt-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-indigo-800 rounded"></div>
+                        <span>Terjawab</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-slate-200 border border-slate-300 rounded"></div>
+                        <span>Belum Dijawab</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-emerald-500 rounded"></div>
+                        <span>Sedang Aktif</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-4 mt-auto border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            &copy; 2026 Akademi Keperawatan Teungku Fakinah Banda Aceh & BP3MI. Ethical & Workplace Adaptation Engine.
+        </div>
+    </footer>
+
+    <!-- Script Engine -->
+    <script>
+        // Data Generators for Ethic & Workplace Adaptation Module
+        const preBaseTemplates = [
+            {
+                mod: "Chapter 1: Professional Ethics",
+                text: "Seorang perawat senior mendapati rekannya melakukan minor data padding pada lembar fluid balance pasien karena kelelahan shift malam. Sikap profesional yang selaras dengan etika integritas adalah:",
+                opts: [
+                    "Menutupi kesalahan demi solidaritas tim perawat",
+                    "Menegur secara konstruktif dan memastikan data dikoreksi demi keselamatan pasien",
+                    "Mengabaikan kejadian karena tidak ada efek samping fatal seketika",
+                    "Melaporkan ke media sosial untuk memberikan efek jera"
+                ],
+                key: 1,
+                rat: "Prinsip integritas menuntut perawat mengutamakan keselamatan pasien di atas toxic solidarity. Menegur dan mengoreksi data mencegah normalisasi pelanggaran."
+            },
+            {
+                mod: "Chapter 2: Modern Workplace",
+                text: "Terjadi benturan komunikasi antara manajer senior yang formal-hierarkis dengan perawat junior yang asertif dan menginginkan hasil cepat. Strategi adaptasi kultural terbaik adalah:",
+                opts: [
+                    "Meminta manajer senior mengikuti gaya komunikasi Gen-Z secara total",
+                    "Membangun jembatan komunikasi dengan menghargai proses hierarki sambil menyampaikan ide secara transparan",
+                    "Membiarkan konflik berlarut-larut hingga salah satu pihak mengundurkan diri",
+                    "Mengatur jadwal dinas agar keduanya tidak pernah bertemu"
+                ],
+                key: 1,
+                rat: "Adaptasi di tempat kerja lintas generasi membutuhkan kecerdasan emosional dan fleksibilitas gaya komunikasi tanpa merusak norma penghormatan."
+            },
+            {
+                mod: "Chapter 3: Resilience & Growth",
+                text: "Ketika rumah sakit menerapkan migrasi sistem rekam medis elektronik (ERP) baru secara mendadak yang memicu kecemasan staf, pendekatan Growth Mindset yang tepat adalah:",
+                opts: [
+                    "Menganggap kesalahan penggunaan awal sebagai feedback pembelajaran dan melakukan peer-learning",
+                    "Menolak menggunakan sistem baru dan tetap memakai catatan kertas",
+                    "Menyalahkan manajemen atas kurva belajar yang mendadak",
+                    "Mengajukan resign massal untuk menghindari stres"
+                ],
+                key: 0,
+                rat: "Growth Mindset melihat perubahan dan hambatan teknis sebagai peluang pengembangan kapasitas profesional melalui pembelajaran bertahap."
+            },
+            {
+                mod: "Chapter 4: Ethical Decision",
+                text: "Seorang perawat berada dalam situasi dilema etika 'benar vs benar' (Truth vs Loyalty). Langkah awal pengambilan keputusan sesuai kerangka Kidder adalah:",
+                opts: [
+                    "Mengambil keputusan emosional paling cepat",
+                    "Memetakan fakta secara objektif dan mengidentifikasi nilai-nilai moral yang berbenturan",
+                    "Mengikuti instruksi tidak tertulis dari rekan sejawat",
+                    "Menyerahkan seluruh masalah kepada komite medik tanpa analisis awal"
+                ],
+                key: 1,
+                rat: "Model pengambilan keputusan etis Kidder mewajibkan klarifikasi fakta objektif dan analisis nilai moral yang bertentangan sebelum menentukan kompromi."
+            },
+            {
+                mod: "Clinical Vignette: SBAR",
+                text: "Perawat melaporkan kondisi penurunan urin dan hipotensi pasien pasca-operasi kepada dokter di malam hari. Dokter merespons dengan ketus. Tindakan perawat junior yang paling tepat adalah:",
+                opts: [
+                    "Menutup telepon dan menangis di nurse station",
+                    "Menyampaikan data SBAR secara asertif dan meminta dokter melakukan evaluasi langsung demi keselamatan pasien",
+                    "Mengubah dosis cairan infus tanpa persetujuan dokter",
+                    "Menyuruh keluarga pasien menelepon dokter secara pribadi"
+                ],
+                key: 1,
+                rat: "Asertivitas profesional berbasis SBAR mewajibkan perawat mempertahankan advokasi keselamatan pasien meskipun menghadapi respons dokter yang otoriter."
+            }
+        ];
+
+        const postBaseTemplates = [
+            {
+                mod: "Poliklinik (Outpatient)",
+                text: "Pasien Diabetes Mellitus memohon agar perawat tidak mencatat hasil tes gula darahnya yang tinggi di sistem EMR karena takut dimarahi dokter. Respon perawat yang paling etis adalah:",
+                opts: [
+                    "Menuruti permintaan pasien demi menjaga perasaan dan hubungan baik",
+                    "Menolak memalsukan rekam medis dan membantu pasien menyampaikan kendala dietnya kepada dokter secara terbuka",
+                    "Menuntut uang bayaran tambahan jika ingin angka gula darah diubah",
+                    "Mencoret hasil tes lab dan membuangnya ke tempat sampah"
+                ],
+                key: 1,
+                rat: "Prinsip Veracity (kejujuran) dan keabsahan rekam medis tidak boleh dikompromikan. Perawat memfasilitasi komunikasi pasien dengan dokter tanpa memalsukan data."
+            },
+            {
+                mod: "Emergency Dept (IGD)",
+                text: "Di tengah overcrowding IGD, keluarga pasien triase kuning marah-marah dan merekam perawat karena merasa diabaikan saat tim sedang meresusitasi pasien triase merah. Langkah komunikasi de-eskalasi terbaik:",
+                opts: [
+                    "Merebut ponsel keluarga pasien dan menghapus rekaman video",
+                    "Bicara dengan tenang, berempati atas kekhawatiran keluarga, dan menjelaskan prioritas penanganan triase merah secara transparan",
+                    "Memanggil sekuriti untuk mengusir seluruh keluarga pasien keluar gedung",
+                    "Acuh tak acuh dan berpura-pura tidak mendengar caci maki"
+                ],
+                key: 1,
+                rat: "De-eskalasi konflik di IGD memerlukan nada bicara tenang, empati, dan penjelasan obyektif mengenai urgensi triase tanpa sikap defensif."
+            },
+            {
+                mod: "Kamar Bedah (OR Time-Out)",
+                text: "Saat prosedur time-out sebelum insisi bedah, perawat sirkuler mendapati hitungan klem hemostatis kurang satu. Dokter bedah mendesak insisi segera karena jadwal padat. Tindakan perawat:",
+                opts: [
+                    "Mengikuti desakan dokter bedah agar operasi selesai tepat waktu",
+                    "Menerapkan protokol 'Stop the Line', menahan insisi, dan melakukan verifikasi hitungan instrumen sampai lengkap",
+                    "Menyalahkan perawat instrumen di depan seluruh tim bedah",
+                    "Mencatat instrumen lengkap secara fiktif di dokumen operasi"
+                ],
+                key: 1,
+                rat: "Protokol keselamatan pasien bedah memberdayakan perawat untuk Henti Prosedur (Stop the Line) jika ada ketidaksesuaian jumlah instrumen."
+            },
+            {
+                mod: "Palliative Care",
+                text: "Seorang pasien terminal memohon kepada perawat untuk membantu menghentikan penderitaannya (euthanasia request). Dukungan holistik perawat yang sesuai etika dan hukum di Indonesia:",
+                opts: [
+                    "Memberikan overdosis sedatif secara diam-diam sesuai permintaan pasien",
+                    "Menolak tindakan euthanasia, mengoptimalkan manajemen nyeri paliatif, serta menghadirkan dukungan spiritual dan keluarga",
+                    "Meninggalkan ruangan dan menolak merawat pasien tersebut lagi",
+                    "Dimarahi karena dianggap tidak bersyukur atas kehidupan"
+                ],
+                key: 1,
+                rat: "Perawat terikat prinsip Non-Maleficence dan hukum positif yang melarang euthanasia, namun wajib memberikan kenyamanan paliatif holistik."
+            },
+            {
+                mod: "GCC Cultural Adaptation",
+                text: "Perawat Indonesia di rumah sakit Arab Saudi merasa kaget ketika keluarga pasien berteriak dengan nada suara tinggi saat meminta obat nyeri. Evaluasi adaptasi budaya yang tepat:",
+                opts: [
+                    "Menganggap teriakan tersebut sebagai ancaman permusuhan pribadi (personal hostility)",
+                    "Memahami bahwa nada suara tinggi dan tegas dalam budaya GCC menunjukkan urgensi emosional, bukan kemarahan personal",
+                    "Melaporkan seluruh keluarga pasien ke polisi lokal atas tuduhan intimidasi",
+                    "Menolak memberikan obat nyeri sampai keluarga berbicara berbisik"
+                ],
+                key: 1,
+                rat: "Pemahaman lintas budaya (cultural fluency) membantu perawat menginterpretasikan vokal tinggi di kawasan GCC sebagai ekspresi urgensi, bukan kebencian personal."
+            }
+        ];
+
+        // Generate 50 Pre-test Items and 150 Post-test Items
+        let preTestDB = [];
+        for(let i=0; i<50; i++) {
+            let t = preBaseTemplates[i % preBaseTemplates.length];
+            preTestDB.push({
+                id: i + 1,
+                mod: t.mod,
+                text: `[Pre-Test #${i+1}] ${t.text}`,
+                opts: t.opts,
+                key: t.key,
+                rat: t.rat
+            });
+        }
+
+        let postTestDB = [];
+        for(let i=0; i<150; i++) {
+            let t = postBaseTemplates[i % postBaseTemplates.length];
+            postTestDB.push({
+                id: i + 1,
+                mod: t.mod,
+                text: `[Post-Test #${i+1}] ${t.text}`,
+                opts: t.opts,
+                key: t.key,
+                rat: t.rat
+            });
+        }
+
+        // Global State Variables
+        let currentMode = 'pre'; // 'pre' or 'post'
+        let isPostUnlocked = false;
+        let userData = { name: '', id: '', inst: '' };
+        
+        let preAnswers = new Array(50).fill(null);
+        let postAnswers = new Array(150).fill(null);
+        let currentIndex = 0;
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            userData.name = document.getElementById('input-name').value;
+            userData.id = document.getElementById('input-id').value;
+            userData.inst = document.getElementById('input-inst').value;
+
+            document.getElementById('badge-info').innerText = `${userData.name} (${userData.id})`;
+            document.getElementById('user-display-badge').classList.remove('hidden');
+        }
+
+        function startTestMode(mode) {
+            if(mode === 'post' && !isPostUnlocked) return;
+            
+            currentMode = mode;
+            currentIndex = 0;
+
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-exam').classList.remove('hidden');
+            document.getElementById('sidebar-panel').classList.remove('hidden');
+
+            const isPre = (currentMode === 'pre');
+            document.getElementById('exam-mode-badge').innerText = isPre ? "PRE-TEST (50 ITEMS)" : "POST-TEST (150 ITEMS)";
+            document.getElementById('sidebar-count').innerText = isPre ? "50 Items" : "150 Items";
+
+            buildNavGrid();
+            loadQuestion(0);
+        }
+
+        function buildNavGrid() {
+            const grid = document.getElementById('nav-grid');
+            grid.innerHTML = '';
+            const total = (currentMode === 'pre') ? 50 : 150;
+
+            for(let i=0; i<total; i++) {
+                const btn = document.createElement('button');
+                btn.id = `nav-btn-${i}`;
+                btn.innerText = i + 1;
+                btn.onclick = () => loadQuestion(i);
+                btn.className = "py-1.5 text-xs font-semibold rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition";
+                grid.appendChild(btn);
+            }
+        }
+
+        function updateNavGridStatus() {
+            const total = (currentMode === 'pre') ? 50 : 150;
+            const activeAnswers = (currentMode === 'pre') ? preAnswers : postAnswers;
+
+            for(let i=0; i<total; i++) {
+                const btn = document.getElementById(`nav-btn-${i}`);
+                if(!btn) continue;
+                if(i === currentIndex) {
+                    btn.className = "py-1.5 text-xs font-bold rounded bg-emerald-500 text-white shadow";
+                } else if(activeAnswers[i] !== null) {
+                    btn.className = "py-1.5 text-xs font-semibold rounded bg-indigo-800 text-white";
+                } else {
+                    btn.className = "py-1.5 text-xs font-semibold rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100";
+                }
+            }
+        }
+
+        function loadQuestion(index) {
+            currentIndex = index;
+            const db = (currentMode === 'pre') ? preTestDB : postTestDB;
+            const activeAnswers = (currentMode === 'pre') ? preAnswers : postAnswers;
+            const q = db[index];
+
+            document.getElementById('question-mod-badge').innerText = q.mod;
+            document.getElementById('question-number-title').innerText = `Soal #${index + 1}`;
+            document.getElementById('progress-text').innerText = `${index + 1} / ${db.length}`;
+            document.getElementById('question-text').innerText = q.text;
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+            q.opts.forEach((optText, optIdx) => {
+                const isSelected = activeAnswers[index] === optIdx;
+                const optDiv = document.createElement('div');
+                optDiv.onclick = () => selectOption(optIdx);
+                optDiv.className = `p-3.5 rounded-lg border text-sm font-medium cursor-pointer transition flex items-center space-x-3 ${
+                    isSelected ? 'border-indigo-700 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-600' : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                }`;
+
+                optDiv.innerHTML = `
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'
+                    }">${labels[optIdx]}</span>
+                    <span class="flex-grow">${optText}</span>
+                `;
+                optsContainer.appendChild(optDiv);
+            });
+
+            // Update Control Buttons
+            document.getElementById('btn-prev').disabled = (index === 0);
+            if(index === db.length - 1) {
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-submit').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-submit').classList.add('hidden');
+            }
+
+            updateNavGridStatus();
+        }
+
+        function selectOption(optIdx) {
+            if(currentMode === 'pre') {
+                preAnswers[currentIndex] = optIdx;
+            } else {
+                postAnswers[currentIndex] = optIdx;
+            }
+            loadQuestion(currentIndex);
+        }
+
+        function navigateQuestion(direction) {
+            const db = (currentMode === 'pre') ? preTestDB : postTestDB;
+            let newIndex = currentIndex + direction;
+            if(newIndex >= 0 && newIndex < db.length) {
+                loadQuestion(newIndex);
+            }
+        }
+
+        function confirmFinish() {
+            const activeAnswers = (currentMode === 'pre') ? preAnswers : postAnswers;
+            const total = (currentMode === 'pre') ? 50 : 150;
+            const answeredCount = activeAnswers.filter(a => a !== null).length;
+
+            if(answeredCount < total) {
+                if(!confirm(`Anda baru menjawab ${answeredCount} dari ${total} soal. Yakin ingin mengakhiri sesi ujian ini?`)) {
+                    return;
+                }
+            }
+            calculateAndShowResult();
+        }
+
+        function calculateAndShowResult() {
+            const db = (currentMode === 'pre') ? preTestDB : postTestDB;
+            const activeAnswers = (currentMode === 'pre') ? preAnswers : postAnswers;
+
+            let correctCount = 0;
+            db.forEach((q, idx) => {
+                if(activeAnswers[idx] === q.key) {
+                    correctCount++;
+                }
+            });
+
+            const percentage = Math.round((correctCount / db.length) * 100);
+
+            document.getElementById('result-mode-tag').innerText = (currentMode === 'pre') ? "HASIL PRE-TEST (50 SOAL)" : "HASIL POST-TEST (150 SOAL)";
+            document.getElementById('score-correct').innerText = `${correctCount} / ${db.length}`;
+            document.getElementById('score-percentage').innerText = `${percentage}%`;
+
+            const statusElem = document.getElementById('score-status');
+            if(percentage >= 70) {
+                statusElem.innerText = "LULUS / KOMPETEN";
+                statusElem.className = "text-base font-bold text-emerald-600 mt-1 block";
+            } else {
+                statusElem.innerText = "PERLU EVALUASI";
+                statusElem.className = "text-base font-bold text-rose-600 mt-1 block";
+            }
+
+            // Unlock Post test if completing Pre Test
+            if(currentMode === 'pre') {
+                isPostUnlocked = true;
+                const postBtn = document.getElementById('btn-start-post');
+                postBtn.disabled = false;
+                postBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition duration-200 text-sm flex items-center justify-center space-x-2";
+                document.getElementById('post-lock-icon').className = "fa-solid fa-lock-open";
+                document.getElementById('post-btn-text').innerText = "Mulai Post-Test (150 MCQ) - Terbuka";
+                document.getElementById('unlock-action-box').classList.remove('hidden');
+            } else {
+                document.getElementById('unlock-action-box').classList.add('hidden');
+            }
+
+            // Build Rationales Review List
+            const ratList = document.getElementById('rationales-list');
+            ratList.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+            db.forEach((q, idx) => {
+                const userAns = activeAnswers[idx];
+                const isCorrect = userAns === q.key;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-lg border text-sm ${isCorrect ? 'bg-emerald-50/50 border-emerald-200' : 'bg-rose-50/50 border-rose-200'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-slate-800">Soal #${idx + 1} (${q.mod})</span>
+                        <span class="text-xs px-2 py-0.5 rounded font-bold ${isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'}">
+                            ${isCorrect ? 'BENAR' : 'SALAH'}
+                        </span>
+                    </div>
+                    <p class="text-slate-700 font-medium mb-3">${q.text}</p>
+                    <div class="space-y-1 mb-3 text-xs">
+                        <div>Jawaban Anda: <span class="font-bold">${userAns !== null ? labels[userAns] + '. ' + q.opts[userAns] : 'Tidak Dijawab'}</span></div>
+                        <div>Kunci Jawaban: <span class="font-bold text-emerald-700">${labels[q.key]}. ${q.opts[q.key]}</span></div>
+                    </div>
+                    <div class="bg-white p-3 rounded border border-slate-200 text-xs text-slate-600">
+                        <span class="font-bold text-slate-800 block mb-1"><i class="fa-solid fa-circle-info text-indigo-600 mr-1"></i> Rationale:</span>
+                        ${q.rat}
+                    </div>
+                `;
+                ratList.appendChild(card);
+            });
+
+            document.getElementById('screen-exam').classList.add('hidden');
+            document.getElementById('sidebar-panel').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+        }
+
+        function switchToPostTest() {
+            startTestMode('post');
+        }
+    </script>
+</body>
+</html>
